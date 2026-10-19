@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="訂閱宇宙重力觀測站，用可操作星圖看懂數位訂閱支出。">
+  <title>訂閱宇宙｜重力觀測站</title>
+  <style>
+    :root {
+      --paper: #f2efe6;
+      --ink: #15151c;
+      --night: #0d1020;
+      --night-2: #151a31;
+      --cream: #fffdf5;
+      --muted: #686973;
+      --line: rgba(21, 21, 28, .18);
+      --line-night: rgba(255, 253, 245, .19);
+      --lime: #c9f45b;
+      --coral: #ff7168;
+      --blue: #5fa8ff;
+      --purple: #9f83ff;
+      --mint: #5ee0bd;
+      --pink: #ff86bd;
+      --yellow: #f6c453;
+      --radius: 22px;
+      --shadow: 0 24px 70px rgba(22, 22, 30, .15);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(rgba(21, 21, 28, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(21, 21, 28, .035) 1px, transparent 1px),
+        var(--paper);
+      background-size: 32px 32px;
+      font-family: "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+      line-height: 1.55;
+    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+    .wrap { width: min(1280px, calc(100% - 40px)); margin-inline: auto; }
+    .mono { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-variant-numeric: tabular-nums; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 0; border-bottom: 1px solid var(--line); }
+    .brand { display: flex; align-items: center; gap: 11px; font-weight: 900; letter-spacing: -.02em; }
+    .brand-mark { width: 34px; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; color: var(--cream); background: var(--ink); box-shadow: inset 0 0 0 7px var(--lime); font-size: 0; }
+    .brand-mark::after { content: ""; width: 7px; aspect-ratio: 1; border-radius: 50%; background: var(--ink); }
+    .device-note { color: var(--muted); font-size: .78rem; margin-left: 8px; font-weight: 500; }
+    .top-actions { display: flex; gap: 9px; }
+    .btn { border: 1px solid var(--ink); border-radius: 999px; padding: 9px 15px; background: transparent; color: var(--ink); font-weight: 800; transition: transform .18s, box-shadow .18s, background .18s; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 7px 0 rgba(21,21,28,.12); }
+    .btn.primary { color: var(--cream); background: var(--ink); }
+    .btn.lime { color: var(--ink); background: var(--lime); border-color: var(--lime); }
+    .btn.coral { color: var(--cream); background: var(--coral); border-color: var(--coral); }
+    .btn.small { padding: 7px 12px; font-size: .82rem; }
+    .hero { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr); gap: 44px; align-items: end; padding: 62px 0 34px; }
+    .kicker { display: flex; align-items: center; gap: 10px; font-size: .78rem; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; }
+    .kicker::before { content: ""; width: 34px; height: 3px; background: var(--coral); }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { max-width: 810px; margin: 17px 0 16px; font-size: clamp(3rem, 7vw, 6.6rem); line-height: .96; letter-spacing: -.075em; }
+    h1 em { color: var(--coral); font-style: normal; }
+    .hero-copy { max-width: 650px; color: var(--muted); font-size: 1.03rem; }
+    .fuel { border-left: 1px solid var(--ink); padding: 4px 0 4px 28px; }
+    .fuel-label { color: var(--muted); font-size: .74rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+    .fuel-number { display: block; font-size: clamp(2.6rem, 5vw, 4.6rem); line-height: 1; letter-spacing: -.07em; margin: 9px 0 5px; }
+    .fuel-year { color: var(--muted); font-size: .9rem; }
+
+    .observatory-shell { position: relative; background: var(--night); color: var(--cream); border-radius: 30px; padding: 14px; box-shadow: var(--shadow); overflow: hidden; }
+    .observatory-shell::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5; background: radial-gradient(circle at 15% 10%, rgba(95,168,255,.16), transparent 26%), radial-gradient(circle at 90% 88%, rgba(201,244,91,.09), transparent 27%); }
+    .console-bar { position: relative; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 9px 10px 15px; border-bottom: 1px solid var(--line-night); }
+    .console-status { display: flex; align-items: center; gap: 9px; font-size: .76rem; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,253,245,.68); }
+    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 5px rgba(201,244,91,.12); }
+    .console-summary { font-size: .8rem; color: rgba(255,253,245,.66); text-align: right; }
+    .stage { position: relative; min-height: 590px; overflow: hidden; border-radius: 20px; background-color: #090c19; background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px); background-size: 36px 36px; }
+    .stage::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(circle, rgba(255,255,255,.82) 0 1px, transparent 1.5px); background-size: 107px 89px; background-position: 17px 31px; opacity: .34; pointer-events: none; }
+    .coord { position: absolute; z-index: 1; color: rgba(255,253,245,.35); font: 10px ui-monospace, monospace; letter-spacing: .12em; }
+    .coord.tl { left: 16px; top: 15px; } .coord.tr { right: 16px; top: 15px; } .coord.bl { left: 16px; bottom: 14px; }
+    .scan-line { position: absolute; z-index: 2; left: 0; right: 0; height: 1px; top: 22%; background: linear-gradient(90deg, transparent, rgba(201,244,91,.7), transparent); opacity: 0; pointer-events: none; }
+    body[data-mode="gravity"] .scan-line { animation: scan 3s ease-in-out infinite; opacity: .5; }
+    @keyframes scan { 0%,100% { top: 18%; } 50% { top: 81%; } }
+    .orbit-ring { position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: 41%; aspect-ratio: 1.65; border: 1px solid rgba(255,253,245,.16); border-radius: 50%; transition: .65s ease; pointer-events: none; }
+    .orbit-ring.r2 { width: 68%; } .orbit-ring.r3 { width: 94%; }
+    body[data-mode="spectrum"] .orbit-ring { opacity: .15; scale: .7; }
+    body[data-mode="gravity"] .orbit-ring { border-color: rgba(255,113,104,.22); border-style: dashed; scale: .82; }
+    body[data-mode="escape"] .orbit-ring.r3 { border-color: rgba(201,244,91,.48); border-style: dashed; }
+    .core { position: absolute; z-index: 2; left: 50%; top: 50%; translate: -50% -50%; width: 104px; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; text-align: center; transition: .5s ease; background: radial-gradient(circle at 35% 30%, #fff8bf, var(--yellow) 34%, #ef7d32 70%, #7b2215); box-shadow: 0 0 27px rgba(246,196,83,.6), 0 0 80px rgba(246,196,83,.18); color: #2a1b08; }
+    .core small { display: block; font-size: .57rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+    .core strong { display: block; font: 900 .83rem ui-monospace, monospace; }
+    body[data-mode="spectrum"] .core { width: 178px; background: var(--spectrum, conic-gradient(var(--blue) 0 100%)); box-shadow: 0 0 0 1px rgba(255,255,255,.2), 0 0 50px rgba(95,168,255,.18); color: var(--cream); }
+    body[data-mode="spectrum"] .core::before { content: ""; position: absolute; inset: 28px; background: var(--night); border-radius: 50%; }
+    body[data-mode="spectrum"] .core > span { position: relative; z-index: 1; }
+    body[data-mode="gravity"] .core { width: 126px; color: var(--cream); background: radial-gradient(circle, #030304 0 36%, #472040 40%, #ff7168 47%, rgba(255,113,104,.15) 53%, transparent 62%); box-shadow: 0 0 55px rgba(255,113,104,.35); }
+    body[data-mode="gravity"] .core::before, body[data-mode="gravity"] .core::after { content: ""; position: absolute; inset: -23px; border: 1px solid rgba(255,113,104,.42); border-radius: 50%; animation: pulse 2.4s ease-out infinite; }
+    body[data-mode="gravity"] .core::after { inset: -44px; animation-delay: .8s; }
+    @keyframes pulse { 0% { opacity: .7; scale: .72; } 100% { opacity: 0; scale: 1.12; } }
+    body[data-mode="escape"] .core { color: var(--cream); background: #151a31; border: 1px dashed rgba(201,244,91,.7); box-shadow: 0 0 55px rgba(201,244,91,.13); }
+    .planet { --planet: var(--blue); --size: 64px; position: absolute; z-index: 4; left: var(--x); top: var(--y); translate: -50% -50%; width: var(--size); aspect-ratio: 1; border: 0; border-radius: 50%; color: var(--cream); background: radial-gradient(circle at 30% 26%, rgba(255,255,255,.9), var(--planet) 30%, color-mix(in srgb, var(--planet), #090a10 58%) 75%); box-shadow: inset -10px -12px 17px rgba(0,0,0,.35), 0 0 24px color-mix(in srgb, var(--planet), transparent 52%); transition: left .72s cubic-bezier(.2,.8,.2,1), top .72s cubic-bezier(.2,.8,.2,1), scale .2s, opacity .28s, filter .28s; animation: float 5.5s ease-in-out infinite alternate; }
+    .planet::after { content: attr(data-label); position: absolute; left: 50%; top: calc(100% + 9px); translate: -50% 0; width: 130px; color: var(--cream); font: 700 .72rem "Microsoft JhengHei", sans-serif; text-shadow: 0 2px 8px #000; pointer-events: none; }
+    .planet::before { content: attr(data-price); position: absolute; left: 50%; top: calc(100% + 28px); translate: -50% 0; width: 120px; color: rgba(255,253,245,.55); font: .61rem ui-monospace, monospace; pointer-events: none; }
+    .planet:hover, .planet:focus-visible, .planet.active { scale: 1.12; z-index: 7; }
+    .planet.active { outline: 2px solid var(--lime); outline-offset: 5px; }
+    .planet.dim { opacity: .14; filter: grayscale(.8); animation: none; }
+    .planet.escape { outline: 2px solid var(--coral); outline-offset: 6px; filter: grayscale(.8); animation: none; }
+    .planet.escape::after { color: var(--coral); }
+    .planet.new { animation: launch .85s cubic-bezier(.2,.9,.3,1.2); }
+    @keyframes float { to { filter: brightness(1.13) saturate(1.08); } }
+    @keyframes launch { from { scale: .05; opacity: 0; left: 50%; top: 50%; } }
+    .mode-caption { position: absolute; z-index: 3; left: 22px; top: 46px; width: 250px; pointer-events: none; }
+    .mode-index { color: var(--lime); font: .72rem ui-monospace, monospace; letter-spacing: .12em; }
+    .mode-caption h2 { font-size: 1.45rem; margin: 5px 0 2px; }
+    .mode-caption p { color: rgba(255,253,245,.55); font-size: .78rem; }
+    .stage-legend { position: absolute; z-index: 5; left: 20px; right: 20px; bottom: 18px; display: flex; flex-wrap: wrap; gap: 7px; pointer-events: none; }
+    .legend-chip { display: inline-flex; align-items: center; gap: 6px; color: rgba(255,253,245,.75); font-size: .67rem; background: rgba(9,12,25,.72); border: 1px solid var(--line-night); border-radius: 999px; padding: 5px 9px; backdrop-filter: blur(5px); pointer-events: auto; }
+    button.legend-chip { cursor: pointer; }
+    .legend-chip.selected { color: var(--cream); border-color: var(--lime); }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--dot); }
+    .empty-stage { position: absolute; z-index: 3; inset: 0; display: grid; place-items: center; text-align: center; padding: 25px; color: rgba(255,253,245,.55); }
+    .inspector { position: absolute; z-index: 9; top: 14px; right: 14px; bottom: 14px; width: min(330px, calc(100% - 28px)); padding: 21px; color: var(--cream); background: rgba(21,26,49,.96); border: 1px solid var(--line-night); border-radius: 18px; box-shadow: -20px 0 60px rgba(0,0,0,.28); translate: calc(100% + 30px) 0; transition: translate .3s ease; overflow: auto; }
+    .inspector.open { translate: 0 0; }
+    .inspector-head { display: flex; justify-content: space-between; gap: 15px; align-items: start; }
+    .inspector h3 { font-size: 1.55rem; margin-bottom: 3px; }
+    .close { width: 34px; height: 34px; border: 1px solid var(--line-night); border-radius: 50%; color: var(--cream); background: transparent; font-size: 1.25rem; }
+    .inspector-category { color: rgba(255,253,245,.55); font-size: .78rem; }
+    .detail-list { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin: 23px 0; }
+    .detail-item { border-top: 1px solid var(--line-night); padding-top: 9px; }
+    .detail-item small { display: block; color: rgba(255,253,245,.52); font-size: .68rem; }
+    .detail-item strong { font: 800 1.05rem ui-monospace, monospace; }
+    .insight { padding: 12px; color: var(--ink); background: var(--lime); border-radius: 12px; font-size: .82rem; font-weight: 700; margin-bottom: 18px; }
+    .inspector-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .mode-switcher { position: relative; z-index: 4; display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; padding-top: 10px; }
+    .mode-btn { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 9px; text-align: left; color: rgba(255,253,245,.58); background: transparent; border: 1px solid transparent; border-radius: 13px; padding: 11px; }
+    .mode-btn:hover { color: var(--cream); background: rgba(255,255,255,.05); }
+    .mode-btn.active { color: var(--cream); background: var(--night-2); border-color: var(--line-night); }
+    .mode-no { color: var(--lime); font: .68rem ui-monospace, monospace; }
+    .mode-btn strong { display: block; font-size: .83rem; }
+    .mode-btn small { display: block; color: inherit; font-size: .64rem; font-weight: 500; }
+
+    .readout { display: grid; grid-template-columns: 300px 1fr; gap: 44px; padding: 48px 0 68px; }
+    .readout-intro { position: sticky; top: 20px; align-self: start; }
+    .readout-index { color: var(--coral); font: 700 .72rem ui-monospace, monospace; letter-spacing: .12em; }
+    .readout h2 { margin: 9px 0; font-size: clamp(1.8rem, 3vw, 3rem); line-height: 1.05; letter-spacing: -.045em; }
+    .readout-intro p { color: var(--muted); font-size: .9rem; }
+    .readout-content { min-width: 0; }
+    .manifest { border-top: 2px solid var(--ink); }
+    .manifest-row { display: grid; grid-template-columns: minmax(150px, 1.4fr) .7fr .75fr .8fr auto; gap: 15px; align-items: center; padding: 14px 7px; border-bottom: 1px solid var(--line); }
+    .manifest-row:hover { background: rgba(255,255,255,.38); }
+    .manifest-row.header { color: var(--muted); font-size: .68rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .service-name { display: flex; align-items: center; gap: 10px; font-weight: 900; }
+    .service-orb { width: 24px; aspect-ratio: 1; flex: 0 0 auto; border-radius: 50%; background: var(--orb); box-shadow: inset -4px -4px 7px rgba(0,0,0,.25); }
+    .text-btn { border: 0; padding: 5px; color: var(--ink); background: transparent; font-weight: 900; text-decoration: underline; text-underline-offset: 4px; }
+    .spectrum-list { display: grid; gap: 10px; }
+    .spectrum-row { display: grid; grid-template-columns: 105px minmax(120px, 1fr) 110px 70px; align-items: center; gap: 13px; padding: 13px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+    .bar-track { height: 14px; background: rgba(21,21,28,.08); border-radius: 99px; overflow: hidden; }
+    .bar { height: 100%; width: var(--width); background: var(--bar); border-radius: inherit; transition: width .5s; }
+    .gravity-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 19px; }
+    .gravity-hero, .saving-hero { color: var(--cream); background: var(--ink); border-radius: 18px; padding: 20px; }
+    .gravity-hero.coral { background: var(--coral); color: var(--ink); }
+    .gravity-hero small, .saving-hero small { display: block; opacity: .65; font-size: .72rem; }
+    .gravity-hero strong, .saving-hero strong { display: block; font-size: clamp(1.45rem, 3vw, 2.3rem); line-height: 1.1; margin: 8px 0 2px; }
+    .rank { display: grid; grid-template-columns: 35px 1fr auto; gap: 12px; align-items: center; padding: 13px 6px; border-bottom: 1px solid var(--line); }
+    .rank-no { color: var(--muted); font: .72rem ui-monospace, monospace; }
+    .rank small { color: var(--muted); display: block; }
+    .rank-value { text-align: right; font-weight: 900; }
+    .escape-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 18px; }
+    .escape-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.38); }
+    .escape-item label { display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 800; }
+    .escape-item input { width: 18px; height: 18px; accent-color: var(--coral); }
+    .saving-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .saving-hero { min-height: 120px; }
+    .saving-hero.accent { color: var(--ink); background: var(--lime); }
+    .empty-readout { padding: 32px 0; border-top: 2px solid var(--ink); color: var(--muted); }
+
+    dialog { width: min(560px, calc(100% - 28px)); max-height: calc(100vh - 28px); border: 1px solid var(--ink); border-radius: 22px; padding: 0; color: var(--ink); background: var(--paper); box-shadow: 0 28px 90px rgba(0,0,0,.32); }
+    dialog::backdrop { background: rgba(13,16,32,.72); backdrop-filter: blur(5px); }
+    .dialog-inner { padding: 24px; }
+    .dialog-head { display: flex; justify-content: space-between; align-items: start; gap: 15px; margin-bottom: 21px; }
+    .dialog-head h2 { margin: 0; font-size: 1.65rem; }
+    .dialog-head p { color: var(--muted); font-size: .82rem; margin: 2px 0 0; }
+    form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    label.field { display: grid; gap: 6px; color: var(--muted); font-size: .78rem; font-weight: 700; }
+    .field.full, .form-actions, .form-error, .quick-row { grid-column: 1 / -1; }
+    input, select { width: 100%; min-height: 45px; border: 1px solid var(--ink); border-radius: 10px; color: var(--ink); background: var(--cream); padding: 9px 11px; }
+    .quick-row { display: flex; gap: 7px; flex-wrap: wrap; }
+    .quick { border: 1px solid var(--line); border-radius: 999px; background: transparent; padding: 5px 9px; color: var(--muted); font-size: .7rem; }
+    .form-actions { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 4px; }
+    .form-error { min-height: 20px; margin: 0; color: #b82e2e; font-size: .8rem; }
+    .toast { position: fixed; z-index: 30; right: 22px; bottom: 22px; display: flex; align-items: center; gap: 15px; max-width: min(420px, calc(100% - 44px)); color: var(--cream); background: var(--ink); border-radius: 14px; padding: 13px 15px; box-shadow: var(--shadow); translate: 0 130%; transition: translate .26s ease; }
+    .toast.show { translate: 0 0; }
+    .toast button { border: 0; color: var(--lime); background: transparent; font-weight: 900; text-decoration: underline; }
+    footer { border-top: 1px solid var(--line); padding: 25px 0 42px; display: flex; justify-content: space-between; gap: 18px; color: var(--muted); font-size: .78rem; }
+
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; gap: 24px; padding-top: 42px; }
+      .fuel { border-left: 0; border-top: 1px solid var(--ink); padding: 18px 0 0; }
+      .stage { min-height: 530px; }
+      .readout { grid-template-columns: 1fr; gap: 23px; }
+      .readout-intro { position: static; }
+      .manifest-row { grid-template-columns: minmax(150px,1fr) .7fr .8fr auto; }
+      .manifest-row > :nth-child(3) { display: none; }
+    }
+    @media (max-width: 650px) {
+      .wrap { width: min(100% - 24px, 1280px); }
+      .device-note, .top-actions .btn:not(.primary) { display: none; }
+      .topbar { padding: 15px 0; }
+      .hero { padding-top: 35px; }
+      h1 { font-size: clamp(3rem, 15vw, 4.5rem); }
+      .observatory-shell { border-radius: 20px; padding: 8px; }
+      .stage { min-height: 515px; border-radius: 14px; }
+      .console-summary { display: none; }
+      .mode-caption { left: 15px; top: 42px; width: 210px; }
+      .mode-caption h2 { font-size: 1.15rem; }
+      .orbit-ring.r1 { width: 58%; } .orbit-ring.r2 { width: 88%; } .orbit-ring.r3 { width: 118%; }
+      .planet::after { width: 88px; font-size: .61rem; } .planet::before { display: none; }
+      .mode-switcher { gap: 3px; }
+      .mode-btn { grid-template-columns: 1fr; text-align: center; padding: 9px 4px; }
+      .mode-no, .mode-btn small { display: none; }
+      .mode-btn strong { font-size: .72rem; }
+      .stage-legend { bottom: 12px; left: 12px; right: 12px; }
+      .inspector { top: auto; left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 74%; translate: 0 calc(100% + 20px); }
+      .inspector.open { translate: 0 0; }
+      .manifest-row { grid-template-columns: 1fr auto auto; gap: 9px; }
+      .manifest-row > :nth-child(2), .manifest-row > :nth-child(3) { display: none; }
+      .spectrum-row { grid-template-columns: 78px 1fr 70px; }
+      .spectrum-row > :last-child { display: none; }
+      .gravity-summary, .saving-grid, .escape-grid { grid-template-columns: 1fr; }
+      form { grid-template-columns: 1fr; }
+      .field.full, .form-actions, .form-error, .quick-row { grid-column: auto; }
+      footer { flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body data-mode="orbit">
+  <header class="wrap topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span>SUB//GALAXY</span><span class="device-note">資料只停留在這台裝置</span></div>
+    <div class="top-actions"><button class="btn small" id="restoreBtn" type="button">恢復示範</button><button class="btn primary small" id="addBtn" type="button">＋ 發射新行星</button></div>
+  </header>
+
+  <main>
+    <section class="wrap hero" aria-labelledby="pageTitle">
+      <div><div class="kicker">Personal orbit report</div><h1 id="pageTitle">每個月，<br>你的錢繞了<em>幾圈？</em></h1><p class="hero-copy" id="heroSentence">載入觀測資料中。</p></div>
+      <div class="fuel"><span class="fuel-label">本月燃料消耗</span><strong class="fuel-number mono" id="monthlyHero">NT$0</strong><span class="fuel-year" id="yearlyHero">全年軌道成本 NT$0</span></div>
+    </section>
+
+    <section class="wrap observatory-shell" aria-label="訂閱重力觀測站">
+      <div class="console-bar"><div class="console-status"><span class="live-dot"></span><span>Orbit telemetry online</span></div><div class="console-summary mono" id="consoleSummary">0 OBJECTS / NT$0 MONTHLY</div></div>
+      <div class="stage" id="stage">
+        <span class="coord tl">RA 03H 44M</span><span class="coord tr">DEC +19° 08′</span><span class="coord bl">LOCAL STORAGE // PRIVATE</span>
+        <span class="scan-line" aria-hidden="true"></span>
+        <span class="orbit-ring r1" aria-hidden="true"></span><span class="orbit-ring r2" aria-hidden="true"></span><span class="orbit-ring r3" aria-hidden="true"></span>
+        <div class="mode-caption"><span class="mode-index" id="modeIndex">MODE 01</span><h2 id="modeTitle">宇宙觀測</h2><p id="modeDescription">月費決定行星尺寸。點擊任一行星查看細節。</p></div>
+        <div class="core" id="core"><span><small>Monthly orbit</small><strong id="coreValue">NT$0</strong></span></div>
+        <div id="planetLayer"></div>
+        <div class="stage-legend" id="stageLegend"></div>
+        <aside class="inspector" id="inspector" aria-label="訂閱詳細資料" aria-hidden="true">
+          <div class="inspector-head"><div><h3 id="inspectName">訂閱名稱</h3><span class="inspector-category" id="inspectCategory"></span></div><button class="close" id="closeInspector" type="button" aria-label="關閉詳細資料">×</button></div>
+          <div class="detail-list" id="detailList"></div><div class="insight" id="inspectInsight"></div>
+          <div class="inspector-actions"><button class="btn lime small" id="editBtn" type="button">編輯資料</button><button class="btn coral small" id="deleteBtn" type="button">移除行星</button></div>
+        </aside>
+      </div>
+      <nav class="mode-switcher" aria-label="觀測模式">
+        <button class="mode-btn active" data-mode="orbit" type="button"><span class="mode-no">01</span><span><strong>宇宙</strong><small>探索與管理訂閱</small></span></button>
+        <button class="mode-btn" data-mode="spectrum" type="button"><span class="mode-no">02</span><span><strong>光譜</strong><small>查看類別分布</small></span></button>
+        <button class="mode-btn" data-mode="gravity" type="button"><span class="mode-no">03</span><span><strong>重力</strong><small>偵測訂閱黑洞</small></span></button>
+        <button class="mode-btn" data-mode="escape" type="button"><span class="mode-no">04</span><span><strong>脫離</strong><small>模擬取消與省錢</small></span></button>
+      </nav>
+    </section>
+
+    <section class="wrap readout" aria-live="polite">
+      <div class="readout-intro"><span class="readout-index" id="readoutIndex">REPORT 01</span><h2 id="readoutTitle">飛行清單</h2><p id="readoutCopy">從完整清單快速聚焦、編輯或比較每顆訂閱行星。</p></div>
+      <div class="readout-content" id="readoutContent"></div>
+    </section>
+  </main>
+
+  <footer class="wrap"><span>訂閱宇宙 重力觀測站</span><span>範例服務與費用僅供作業展示，不代表官方現價。</span></footer>
+
+  <dialog id="formDialog" aria-labelledby="formTitle">
+    <div class="dialog-inner"><div class="dialog-head"><div><h2 id="formTitle">發射新行星</h2><p>加入一筆訂閱，它會立刻進入你的個人軌道。</p></div><button class="close" id="closeForm" type="button" aria-label="關閉表單">×</button></div>
+      <form id="subscriptionForm" novalidate>
+        <input id="editId" type="hidden">
+        <div class="quick-row" aria-label="快速填入"><button class="quick" type="button" data-quick="Netflix">Netflix</button><button class="quick" type="button" data-quick="Spotify">Spotify</button><button class="quick" type="button" data-quick="YouTube Premium">YouTube Premium</button><button class="quick" type="button" data-quick="ChatGPT Plus">ChatGPT Plus</button></div>
+        <label class="field full">服務名稱<input id="nameInput" maxlength="42" placeholder="例如 Netflix" required></label>
+        <label class="field">類別<select id="categoryInput"><option value="影音">影音</option><option value="音樂">音樂</option><option value="遊戲">遊戲</option><option value="AI">AI</option><option value="其他">其他</option></select></label>
+        <label class="field">每月費用 NT$<input id="priceInput" type="number" min="0" step="1" inputmode="numeric" placeholder="例如 390" required></label>
+        <label class="field full">每月使用次數<input id="usesInput" type="number" min="0" step="1" inputmode="numeric" placeholder="例如 12" required></label>
+        <p class="form-error" id="formError" aria-live="polite"></p>
+        <div class="form-actions"><button class="btn primary" id="submitBtn" type="submit">發射行星</button><button class="btn" id="cancelForm" type="button">取消</button></div>
+      </form>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastText"></span><button id="undoBtn" type="button" hidden>復原</button></div>
+
+  <script>
+    const STORAGE_KEY = 'subscriptionGalaxy.v2';
+    const LEGACY_KEY = 'subscription-galaxy-v1';
+    const categories = {
+      '影音': { color: '#5fa8ff', short: 'V' }, '音樂': { color: '#ff86bd', short: 'M' },
+      '遊戲': { color: '#9f83ff', short: 'G' }, 'AI': { color: '#5ee0bd', short: 'AI' }, '其他': { color: '#f6c453', short: 'O' }
+    };
+    const samples = [
+      { id: 'netflix', name: 'Netflix', category: '影音', price: 390, uses: 10 },
+      { id: 'disney', name: 'Disney Plus', category: '影音', price: 270, uses: 4 },
+      { id: 'spotify', name: 'Spotify', category: '音樂', price: 149, uses: 24 },
+      { id: 'youtube', name: 'YouTube Premium', category: '影音', price: 199, uses: 18 },
+      { id: 'chatgpt', name: 'ChatGPT Plus', category: 'AI', price: 650, uses: 18 },
+      { id: 'playstation', name: 'PlayStation Plus', category: '遊戲', price: 228, uses: 0 }
+    ];
+    const quickValues = {
+      'Netflix': ['影音', 390, 10], 'Spotify': ['音樂', 149, 24],
+      'YouTube Premium': ['影音', 199, 18], 'ChatGPT Plus': ['AI', 650, 18]
+    };
+    const modeText = {
+      orbit: ['MODE 01', '宇宙觀測', '月費決定行星尺寸。點擊任一行星查看細節。', 'REPORT 01', '飛行清單', '從完整清單快速聚焦、編輯或比較每顆訂閱行星。'],
+      spectrum: ['MODE 02', '消費光譜', '行星依類別集結。點擊色票可單獨觀測某個星系。', 'REPORT 02', '支出光譜', '每一道光代表一種生活選擇，也代表一部分固定支出。'],
+      gravity: ['MODE 03', '重力掃描', '成本越高，行星越靠近黑洞；零次使用直接進入事件視界。', 'REPORT 03', '重力排行榜', '以單次使用成本排序，找出最值得重新檢查的訂閱。'],
+      escape: ['MODE 04', '逃逸航線', '點擊行星或勾選清單，模擬讓訂閱脫離軌道。', 'REPORT 04', '取消模擬', '這只是預算沙盒，不會真的取消任何外部服務。']
+    };
+    const $ = selector => document.querySelector(selector);
+    const money = value => `NT$${Math.round(value).toLocaleString('zh-TW')}`;
+    const escapeHTML = value => String(value).replace(/[&<>'"]/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '"':'&quot;' })[char]);
+    let subscriptions = loadData();
+    let mode = 'orbit';
+    let activeId = null;
+    let activeCategory = null;
+    let escapeIds = new Set();
+    let pendingDelete = null;
+    let toastTimer = null;
+    let newestId = null;
+
+    function cloneSamples() { return samples.map(item => ({ ...item })); }
+    function normalizeList(value) {
+      if (!Array.isArray(value)) return null;
+      return value.filter(item => item && typeof item.name === 'string' && categories[item.category] && Number(item.price) >= 0 && Number.isInteger(Number(item.uses)) && Number(item.uses) >= 0)
+        .map(item => ({ id: String(item.id || `item-${crypto.randomUUID()}`), name: item.name.trim(), category: item.category, price: Number(item.price), uses: Number(item.uses) }));
+    }
+    function loadData() {
+      try {
+        const current = normalizeList(JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'));
+        if (current) return current;
+        const legacy = normalizeList(JSON.parse(localStorage.getItem(LEGACY_KEY) || 'null'));
+        return legacy || cloneSamples();
+      } catch { return cloneSamples(); }
+    }
+    function saveData() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(subscriptions)); } catch { showToast('瀏覽器目前無法保存資料。'); } }
+    function totalMonthly() { return subscriptions.reduce((sum, item) => sum + item.price, 0); }
+    function costPerUse(item) { return item.uses === 0 ? Infinity : item.price / item.uses; }
+    function getBlackHole() {
+      if (!subscriptions.length) return null;
+      const unused = subscriptions.filter(item => item.uses === 0).sort((a,b) => b.price - a.price);
+      return unused[0] || [...subscriptions].sort((a,b) => costPerUse(b) - costPerUse(a))[0];
+    }
+    function categoryTotals() {
+      return Object.keys(categories).map(category => ({ category, total: subscriptions.filter(item => item.category === category).reduce((sum, item) => sum + item.price, 0) })).filter(item => item.total > 0);
+    }
+    function deterministic(id) { return [...id].reduce((sum, char) => (sum * 31 + char.charCodeAt(0)) >>> 0, 17); }
+    function orbitPosition(item, index) {
+      const count = Math.max(subscriptions.length, 1); const seed = deterministic(item.id); const angle = (-86 + index * 360 / count + seed % 21) * Math.PI / 180; const radius = index % 3 === 0 ? 24 : index % 3 === 1 ? 34 : 44;
+      return { x: 50 + Math.cos(angle) * radius, y: 52 + Math.sin(angle) * radius * .67 };
+    }
+    function spectrumPosition(item, index) {
+      const centers = { '影音':[24,36], '音樂':[73,31], '遊戲':[24,71], 'AI':[72,69], '其他':[50,82] }; const center = centers[item.category]; const group = subscriptions.filter(x => x.category === item.category); const rank = group.findIndex(x => x.id === item.id); const angle = (rank * 137 + deterministic(item.id) % 40) * Math.PI / 180; const radius = 5 + Math.min(10, rank * 3);
+      return { x: center[0] + Math.cos(angle) * radius, y: center[1] + Math.sin(angle) * radius * .68 };
+    }
+    function gravityPosition(item) {
+      const ranked = [...subscriptions].sort((a,b) => costPerUse(b) - costPerUse(a)); const rank = ranked.findIndex(x => x.id === item.id); const angle = (-70 + rank * 137.5) * Math.PI / 180; const radius = 16 + rank * (30 / Math.max(ranked.length - 1, 1));
+      return { x: 50 + Math.cos(angle) * radius, y: 52 + Math.sin(angle) * radius * .67 };
+    }
+    function escapePosition(item, index) {
+      if (!escapeIds.has(item.id)) return orbitPosition(item, index);
+      const selected = subscriptions.filter(x => escapeIds.has(x.id)); const rank = selected.findIndex(x => x.id === item.id); const angle = (-35 + rank * 360 / Math.max(selected.length, 1)) * Math.PI / 180;
+      return { x: 50 + Math.cos(angle) * 46, y: 52 + Math.sin(angle) * 46 * .7 };
+    }
+    function planetPosition(item, index) { return mode === 'spectrum' ? spectrumPosition(item, index) : mode === 'gravity' ? gravityPosition(item) : mode === 'escape' ? escapePosition(item, index) : orbitPosition(item, index); }
+
+    function render() {
+      const monthly = totalMonthly();
+      $('#monthlyHero').textContent = money(monthly); $('#yearlyHero').textContent = `全年軌道成本 ${money(monthly * 12)}`;
+      $('#heroSentence').textContent = subscriptions.length ? `目前發現 ${subscriptions.length} 顆訂閱行星。每一顆都很小，但它們正在形成每年 ${money(monthly * 12)} 的固定引力。` : '宇宙還很安靜。發射第一顆訂閱行星，開始建立你的支出星圖。';
+      $('#consoleSummary').textContent = `${subscriptions.length} OBJECTS / ${money(monthly)} MONTHLY`;
+      document.body.dataset.mode = mode;
+      updateModeText(); renderCore(); renderPlanets(); renderLegend(); renderReadout(); saveData();
+    }
+    function updateModeText() {
+      const text = modeText[mode]; $('#modeIndex').textContent = text[0]; $('#modeTitle').textContent = text[1]; $('#modeDescription').textContent = text[2]; $('#readoutIndex').textContent = text[3]; $('#readoutTitle').textContent = text[4]; $('#readoutCopy').textContent = text[5];
+      document.querySelectorAll('.mode-btn').forEach(button => button.classList.toggle('active', button.dataset.mode === mode));
+    }
+    function renderCore() {
+      const core = $('#core'); const monthly = totalMonthly(); core.style.removeProperty('--spectrum');
+      if (mode === 'orbit') core.innerHTML = `<span><small>Monthly orbit</small><strong>${money(monthly)}</strong></span>`;
+      if (mode === 'spectrum') {
+        const totals = categoryTotals(); let cursor = 0; const parts = totals.map(item => { const start = cursor; cursor += monthly ? item.total / monthly * 100 : 0; return `${categories[item.category].color} ${start}% ${cursor}%`; }); core.style.setProperty('--spectrum', parts.length ? `conic-gradient(${parts.join(',')})` : 'conic-gradient(#394057 0 100%)');
+        const selected = totals.find(item => item.category === activeCategory); core.innerHTML = `<span><small>${selected ? selected.category : 'All spectra'}</small><strong>${selected ? money(selected.total) : money(monthly)}</strong></span>`;
+      }
+      if (mode === 'gravity') { const black = getBlackHole(); core.innerHTML = `<span><small>Black hole</small><strong>${black ? escapeHTML(black.name) : 'NONE'}</strong></span>`; }
+      if (mode === 'escape') { const saved = subscriptions.filter(item => escapeIds.has(item.id)).reduce((sum,item) => sum + item.price, 0); core.innerHTML = `<span><small>Monthly saved</small><strong>${money(saved)}</strong></span>`; }
+    }
+    function renderPlanets() {
+      const layer = $('#planetLayer'); layer.innerHTML = '';
+      if (!subscriptions.length) {
+        layer.innerHTML = '<div class="empty-stage"><div><strong>宇宙還很安靜。</strong><br>發射第一顆訂閱行星，開始建立支出星圖。<br><br><button class="btn lime small" type="button" data-empty-add>＋ 發射第一顆行星</button></div></div>';
+        layer.querySelector('[data-empty-add]').addEventListener('click', () => openForm());
+        return;
+      }
+      subscriptions.forEach((item, index) => {
+        const pos = planetPosition(item, index); const size = Math.min(92, Math.max(46, 40 + Math.sqrt(item.price) * 1.65)); const button = document.createElement('button'); const dim = mode === 'spectrum' && activeCategory && item.category !== activeCategory;
+        button.type = 'button'; button.className = `planet${item.id === activeId ? ' active' : ''}${escapeIds.has(item.id) && mode === 'escape' ? ' escape' : ''}${dim ? ' dim' : ''}${item.id === newestId ? ' new' : ''}`; button.dataset.id = item.id; button.dataset.label = item.name; button.dataset.price = money(item.price); button.style.cssText = `--planet:${categories[item.category].color};--size:${size}px;--x:${pos.x}%;--y:${pos.y}%`;
+        button.setAttribute('aria-label', `${item.name}，每月 ${money(item.price)}`); button.innerHTML = `<span class="mono">${categories[item.category].short}</span>`; button.addEventListener('click', () => handlePlanetClick(item)); layer.appendChild(button);
+      });
+      newestId = null;
+    }
+    function renderLegend() {
+      const legend = $('#stageLegend');
+      if (mode === 'spectrum') legend.innerHTML = `<button class="legend-chip ${activeCategory === null ? 'selected' : ''}" type="button" data-filter="all">全部</button>` + categoryTotals().map(item => `<button class="legend-chip ${activeCategory === item.category ? 'selected' : ''}" type="button" data-filter="${item.category}"><i class="dot" style="--dot:${categories[item.category].color}"></i>${item.category}</button>`).join('');
+      else if (mode === 'escape') legend.innerHTML = `<span class="legend-chip"><i class="dot" style="--dot:var(--coral)"></i>已選擇 ${escapeIds.size} 顆</span><button class="legend-chip" type="button" data-clear-escape>清除模擬</button>`;
+      else legend.innerHTML = Object.entries(categories).map(([name, meta]) => `<span class="legend-chip"><i class="dot" style="--dot:${meta.color}"></i>${name}</span>`).join('');
+      legend.querySelectorAll('[data-filter]').forEach(button => button.addEventListener('click', () => { activeCategory = button.dataset.filter === 'all' ? null : button.dataset.filter; renderCore(); renderPlanets(); renderLegend(); }));
+      legend.querySelector('[data-clear-escape]')?.addEventListener('click', () => { escapeIds.clear(); render(); });
+    }
+    function handlePlanetClick(item) {
+      if (mode === 'escape') { escapeIds.has(item.id) ? escapeIds.delete(item.id) : escapeIds.add(item.id); render(); return; }
+      if (mode === 'spectrum') { activeCategory = activeCategory === item.category ? null : item.category; render(); return; }
+      openInspector(item.id);
+    }
+    function openInspector(id) {
+      const item = subscriptions.find(x => x.id === id); if (!item) return; activeId = id;
+      $('#inspectName').textContent = item.name; $('#inspectCategory').textContent = `${item.category}行星 · ${categories[item.category].short}`;
+      $('#detailList').innerHTML = `<div class="detail-item"><small>每月費用</small><strong>${money(item.price)}</strong></div><div class="detail-item"><small>每年費用</small><strong>${money(item.price * 12)}</strong></div><div class="detail-item"><small>本月使用</small><strong>${item.uses} 次</strong></div><div class="detail-item"><small>單次成本</small><strong>${item.uses === 0 ? '未使用' : money(costPerUse(item))}</strong></div>`;
+      $('#inspectInsight').textContent = item.uses === 0 ? `這顆行星本月沒有使用紀錄，但仍消耗 ${money(item.price)}。` : `平均每次使用成本約 ${money(costPerUse(item))}。`;
+      $('#inspector').classList.add('open'); $('#inspector').setAttribute('aria-hidden','false'); renderPlanets();
+    }
+    function closeInspector() { activeId = null; $('#inspector').classList.remove('open'); $('#inspector').setAttribute('aria-hidden','true'); renderPlanets(); }
+
+    function renderReadout() {
+      const target = $('#readoutContent');
+      if (!subscriptions.length) { target.innerHTML = '<div class="empty-readout">目前沒有訂閱資料。發射新行星後，分析會出現在這裡。</div>'; return; }
+      if (mode === 'orbit') renderManifest(target);
+      if (mode === 'spectrum') renderSpectrum(target);
+      if (mode === 'gravity') renderGravity(target);
+      if (mode === 'escape') renderEscape(target);
+    }
+    function renderManifest(target) {
+      target.innerHTML = `<div class="manifest"><div class="manifest-row header"><span>服務</span><span>類別</span><span>使用次數</span><span>單次成本</span><span>操作</span></div>${subscriptions.map(item => `<div class="manifest-row"><span class="service-name"><i class="service-orb" style="--orb:${categories[item.category].color}"></i>${escapeHTML(item.name)}</span><span>${item.category}</span><span>${item.uses} 次</span><span class="mono">${item.uses === 0 ? '未使用' : money(costPerUse(item))}</span><button class="text-btn" type="button" data-focus="${item.id}">聚焦</button></div>`).join('')}</div>`;
+      target.querySelectorAll('[data-focus]').forEach(button => button.addEventListener('click', () => { openInspector(button.dataset.focus); $('#stage').scrollIntoView({ behavior:'smooth', block:'center' }); }));
+    }
+    function renderSpectrum(target) {
+      const monthly = totalMonthly(); target.innerHTML = `<div class="spectrum-list">${categoryTotals().map(item => { const pct = monthly ? item.total / monthly * 100 : 0; return `<div class="spectrum-row" data-spectrum="${item.category}"><strong>${item.category}</strong><div class="bar-track"><div class="bar" style="--bar:${categories[item.category].color};--width:${pct}%"></div></div><span class="mono">${money(item.total)}</span><span class="mono">${Math.round(pct)}%</span></div>`; }).join('')}</div>`;
+      target.querySelectorAll('[data-spectrum]').forEach(row => row.addEventListener('click', () => { activeCategory = activeCategory === row.dataset.spectrum ? null : row.dataset.spectrum; render(); $('#stage').scrollIntoView({ behavior:'smooth', block:'center' }); }));
+    }
+    function renderGravity(target) {
+      const black = getBlackHole(); const ranked = [...subscriptions].sort((a,b) => costPerUse(b) - costPerUse(a));
+      target.innerHTML = `<div class="gravity-summary"><div class="gravity-hero coral"><small>訂閱黑洞</small><strong>${escapeHTML(black.name)}</strong><span>${black.uses === 0 ? '本月 0 次使用' : `每次 ${money(costPerUse(black))}`}</span></div><div class="gravity-hero"><small>持續引力</small><strong>${money(black.price * 12)}</strong><span>這項服務的年成本</span></div></div><div>${ranked.map((item,index) => `<div class="rank"><span class="rank-no">${String(index+1).padStart(2,'0')}</span><div><strong>${escapeHTML(item.name)}</strong><small>${item.uses === 0 ? '本月未使用' : `本月使用 ${item.uses} 次`}</small></div><span class="rank-value ${item.uses === 0 ? '' : 'mono'}">${item.uses === 0 ? '事件視界' : `${money(costPerUse(item))}/次`}</span></div>`).join('')}</div>`;
+    }
+    function renderEscape(target) {
+      const savedMonthly = subscriptions.filter(item => escapeIds.has(item.id)).reduce((sum,item) => sum + item.price, 0); const remaining = totalMonthly() - savedMonthly; const yearly = savedMonthly * 12;
+      target.innerHTML = `<div class="escape-grid">${subscriptions.map(item => `<div class="escape-item"><label><input type="checkbox" value="${item.id}" ${escapeIds.has(item.id) ? 'checked' : ''}><span>${escapeHTML(item.name)}</span></label><strong class="mono">${money(item.price)}</strong></div>`).join('')}</div><div class="saving-grid"><div class="saving-hero accent"><small>一年可省</small><strong>${money(yearly)}</strong><span>約 ${Math.round(yearly / 100)} 杯 NT$100 咖啡</span></div><div class="saving-hero"><small>每月可省</small><strong>${money(savedMonthly)}</strong><span>${escapeIds.size} 顆行星準備脫離</span></div><div class="saving-hero"><small>取消後月支出</small><strong>${money(remaining)}</strong><span>模擬結果，不會真的取消</span></div></div>`;
+      target.querySelectorAll('input[type=checkbox]').forEach(input => input.addEventListener('change', () => { input.checked ? escapeIds.add(input.value) : escapeIds.delete(input.value); render(); }));
+    }
+
+    function openForm(item = null) {
+      $('#subscriptionForm').reset(); $('#formError').textContent = ''; $('#editId').value = item?.id || ''; $('#formTitle').textContent = item ? `校正 ${item.name}` : '發射新行星'; $('#submitBtn').textContent = item ? '儲存校正' : '發射行星';
+      if (item) { $('#nameInput').value = item.name; $('#categoryInput').value = item.category; $('#priceInput').value = item.price; $('#usesInput').value = item.uses; }
+      $('#formDialog').showModal(); setTimeout(() => $('#nameInput').focus(), 30);
+    }
+    function closeForm() { $('#formDialog').close(); }
+    function handleSubmit(event) {
+      event.preventDefault(); const id = $('#editId').value; const name = $('#nameInput').value.trim(); const category = $('#categoryInput').value; const priceRaw = $('#priceInput').value.trim(); const usesRaw = $('#usesInput').value.trim(); const price = Number(priceRaw); const uses = Number(usesRaw);
+      if (!name) return $('#formError').textContent = '請輸入服務名稱。';
+      if (priceRaw === '' || usesRaw === '') return $('#formError').textContent = '請完整填寫每月費用與使用次數。';
+      if (!Number.isInteger(price) || price < 0) return $('#formError').textContent = '每月費用請輸入 0 或正整數。';
+      if (!Number.isInteger(uses) || uses < 0) return $('#formError').textContent = '使用次數請輸入 0 或正整數。';
+      if (id) subscriptions = subscriptions.map(item => item.id === id ? { ...item, name, category, price, uses } : item);
+      else { const newId = `custom-${Date.now()}`; subscriptions.push({ id:newId, name, category, price, uses }); newestId = newId; }
+      closeForm(); closeInspector(); render(); showToast(id ? `${name} 的軌道資料已更新。` : `${name} 已進入你的訂閱宇宙。`);
+    }
+    function deleteActive() {
+      const index = subscriptions.findIndex(item => item.id === activeId); if (index < 0) return; const [item] = subscriptions.splice(index, 1); pendingDelete = { item, index }; escapeIds.delete(item.id); closeInspector(); render(); showToast(`${item.name} 已移出宇宙。`, true);
+    }
+    function undoDelete() { if (!pendingDelete) return; subscriptions.splice(pendingDelete.index, 0, pendingDelete.item); pendingDelete = null; render(); showToast('行星已回到原本軌道。'); }
+    function restoreSamples() { if (!confirm('恢復示範宇宙會取代目前的訂閱資料，確定繼續嗎？')) return; subscriptions = cloneSamples(); escapeIds.clear(); activeCategory = null; closeInspector(); render(); showToast('示範宇宙已恢復。'); }
+    function showToast(message, undo = false) { clearTimeout(toastTimer); $('#toastText').textContent = message; $('#undoBtn').hidden = !undo; $('#toast').classList.add('show'); toastTimer = setTimeout(() => { $('#toast').classList.remove('show'); $('#undoBtn').hidden = true; pendingDelete = null; }, 4500); }
+    function changeMode(next) { mode = next; activeCategory = null; closeInspector(); render(); }
+    function runSelfCheck() { const sample = [{price:100,uses:2},{price:50,uses:0}]; console.assert(sample.reduce((sum,x)=>sum+x.price,0) === 150, '總額計算失敗'); console.assert(costPerUse(sample[0]) === 50 && costPerUse(sample[1]) === Infinity, '單次成本計算失敗'); }
+
+    document.querySelectorAll('.mode-btn').forEach(button => button.addEventListener('click', () => changeMode(button.dataset.mode)));
+    $('#addBtn').addEventListener('click', () => openForm()); $('#restoreBtn').addEventListener('click', restoreSamples); $('#closeInspector').addEventListener('click', closeInspector); $('#editBtn').addEventListener('click', () => openForm(subscriptions.find(item => item.id === activeId))); $('#deleteBtn').addEventListener('click', deleteActive);
+    $('#subscriptionForm').addEventListener('submit', handleSubmit); $('#closeForm').addEventListener('click', closeForm); $('#cancelForm').addEventListener('click', closeForm); $('#undoBtn').addEventListener('click', undoDelete);
+    document.querySelectorAll('[data-quick]').forEach(button => button.addEventListener('click', () => { const value = quickValues[button.dataset.quick]; $('#nameInput').value = button.dataset.quick; $('#categoryInput').value = value[0]; $('#priceInput').value = value[1]; $('#usesInput').value = value[2]; }));
+    runSelfCheck(); render();
+  </script>
+</body>
+</html>
